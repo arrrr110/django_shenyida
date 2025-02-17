@@ -1,24 +1,50 @@
+# admin.py
+
 from django.contrib import admin
-from .models import Device, BloodOxygen, BloodPressure, HeightWeight
+from .models import Device, HealthData
 
-# 设备模型的 ModelAdmin 类
+# 自定义截断显示函数
+def truncate_value(value):
+    if value and len(str(value)) > 5:
+        return str(value)[:5] + '...'
+    return value
+
+# 注册 Device 模型到 Django 管理后台
+@admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
-    list_display = ('device_model', 'unit_name', 'unit_no', 'mac_addr', 'device_no')
+    """
+    设备模型的管理类，用于在 Django 管理后台展示设备信息
+    """
+    # 显示所有字段
+    list_display = [
+        'device_model', 'unit_name', 'unit_no', 'mac_addr', 'device_no'
+    ]
+    # 搜索字段
+    search_fields = ['device_model', 'unit_name', 'unit_no', 'mac_addr', 'device_no']
 
-# 血氧模型的 ModelAdmin 类
-class BloodOxygenAdmin(admin.ModelAdmin):
-    list_display = ('device', 'xy_n', 'address', 'user_id', 'login_type', 'measure_time', 'birthday', 'bpm', 'xy_s', 'xy', 'age', 'bpm_n', 'name', 'bpm_s', 'sex', 'record_no')
+# 注册 HealthData 模型到 Django 管理后台
+@admin.register(HealthData)
+class HealthDataAdmin(admin.ModelAdmin):
+    """
+    健康数据模型的管理类，用于在 Django 管理后台展示健康数据信息
+    """
+    # 自定义显示方法 省略展示内容
+    def address_display(self, obj):
+        return truncate_value(obj.address)
 
-# 血压模型的 ModelAdmin 类
-class BloodPressureAdmin(admin.ModelAdmin):
-    list_display = ('device', 'address', 'user_id', 'login_type', 'hrR_s', 'sbpR_n', 'measure_time', 'dbpR_s', 'dbpR', 'sbpR', 'hrR', 'birthday', 'age', 'sbpR_s', 'name', 'sex', 'hrR_n', 'record_no', 'dbpR_n')
+    address_display.short_description = '地址'
 
-# 身高体重模型的 ModelAdmin 类
-class HeightWeightAdmin(admin.ModelAdmin):
-    list_display = ('device', 'address', 'user_id', 'login_type', 'measure_time', 'bmi_s', 'bmi', 'height', 'nation', 'birthday', 'weight', 'age', 'weight_n', 'name', 'weight_s', 'start_date', 'end_date', 'sex', 'department', 'record_no', 'bmi_n')
-
-# 注册模型和对应的 ModelAdmin 类
-admin.site.register(Device, DeviceAdmin)
-admin.site.register(BloodOxygen, BloodOxygenAdmin)
-admin.site.register(BloodPressure, BloodPressureAdmin)
-admin.site.register(HeightWeight, HeightWeightAdmin)
+    # 显示所有字段
+    list_display = [
+        'device', 'data_type', 'user_id',  'name', 'measure_time', 'record_no', 'bpm_n', 'bpm_s', 'bpm', 'xy_n', 'xy_s', 'xy',
+        'hrR_s', 'sbpR_n', 'dbpR_s', 'dbpR', 'sbpR', 'hrR', 'sbpR_s', 'hrR_n',
+        'dbpR_n', 'bmi_s', 'bmi', 'height', 'nation', 'weight', 'weight_n',
+        'weight_s', 'start_date', 'end_date', 'department', 'bmi_n', 'address_display',
+        'login_type', 'birthday', 'age', 'sex'
+    ]
+    # 搜索字段
+    search_fields = [
+        'device__device_no', 'data_type', 'user_id', 'name', 'record_no'
+    ]
+    # 过滤字段
+    list_filter = ['data_type', 'measure_time']

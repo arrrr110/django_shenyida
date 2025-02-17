@@ -1,23 +1,27 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+# views.py
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from .models import Device, BloodOxygen, BloodPressure, HeightWeight
+from .serializers import DeviceSerializer, BloodOxygenSerializer, BloodPressureSerializer, HeightWeightSerializer
 import json
 from datetime import datetime
-from django.utils import timezone
+# from django.utils import timezone
 import pytz
 
 # 设置中国时区
 china_tz = pytz.timezone('Asia/Shanghai')
 
-@csrf_exempt
-def index(request):
+class IndexView(APIView):
     """
-    接收POST请求并将数据分类注入到特定表中的视图函数
+    接收 POST 请求并将数据分类注入到特定表中的视图类
     """
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
         try:
-            # 解析JSON数据
-            data = json.loads(request.body)
+            # 使用 request.data 来获取JSON数据
+            data = request.data
             device_model = data.get('deviceModel')
             unit_name = data.get('unitName')
             unit_no = data.get('unitNo')
@@ -42,7 +46,7 @@ def index(request):
                     measure_time = datetime.strptime(blood_oxygen_data.get('measureTime'), '%Y-%m-%d %H:%M:%S')
                     # 转换为中国时区
                     measure_time = china_tz.localize(measure_time)
-                    BloodOxygen.objects.create(
+                    blood_oxygen = BloodOxygen.objects.create(
                         device=device,
                         xy_n=blood_oxygen_data.get('xy_n'),
                         address=blood_oxygen_data.get('address'),
@@ -60,6 +64,8 @@ def index(request):
                         sex=blood_oxygen_data.get('sex'),
                         record_no=blood_oxygen_data.get('recordNo')
                     )
+                    serializer = BloodOxygenSerializer(blood_oxygen)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
                 # 处理血压数据
                 elif 'hrR_s' in data['datas'][0]:
                     print('识别为:血压数据')
@@ -67,7 +73,7 @@ def index(request):
                     measure_time = datetime.strptime(blood_pressure_data.get('measureTime'), '%Y-%m-%d %H:%M:%S')
                     # 转换为中国时区
                     measure_time = china_tz.localize(measure_time)
-                    BloodPressure.objects.create(
+                    blood_pressure = BloodPressure.objects.create(
                         device=device,
                         address=blood_pressure_data.get('address'),
                         user_id=blood_pressure_data.get('userID'),
@@ -88,6 +94,8 @@ def index(request):
                         record_no=blood_pressure_data.get('recordNo'),
                         dbpR_n=blood_pressure_data.get('dbpR_n')
                     )
+                    serializer = BloodPressureSerializer(blood_pressure)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
             elif device_model == 'X15_6':
                 # 处理身高体重数据
                 print('识别为:身高数据')
@@ -97,11 +105,14 @@ def index(request):
                 start_date = datetime.strptime(height_weight_data.get('startDate'), '%Y-%m-%d')
                 end_date = datetime.strptime(height_weight_data.get('endDate'), '%Y-%m-%d')
                 # 转换为中国时区
+                birthday = datetime.strptime(height_weight_data.get('birthday'), '%Y-%m-%d').date()
+                start_date = datetime.strptime(height_weight_data.get('startDate'), '%Y-%m-%d').date()
+                end_date = datetime.strptime(height_weight_data.get('endDate'), '%Y-%m-%d').date()
                 measure_time = china_tz.localize(measure_time)
-                birthday = china_tz.localize(birthday)
-                start_date = china_tz.localize(start_date)
-                end_date = china_tz.localize(end_date)
-                HeightWeight.objects.create(
+                # birthday = china_tz.localize(birthday)
+                # start_date = china_tz.localize(start_date)
+                # end_date = china_tz.localize(end_date)
+                height_weight = HeightWeight.objects.create(
                     device=device,
                     address=height_weight_data.get('address'),
                     user_id=height_weight_data.get('userID'),
@@ -124,9 +135,12 @@ def index(request):
                     record_no=height_weight_data.get('recordNo'),
                     bmi_n=height_weight_data.get('bmi_n')
                 )
+                serializer = HeightWeightSerializer(height_weight)
+                return Response(serializer.data, status=status.HTTP_200_OK)
 
-            return JsonResponse({'status': 'success'}, status=200)
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, *args, **kwargs):
+        return Response({'status': 'error', 'message': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
