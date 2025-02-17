@@ -42,6 +42,7 @@ DATA_TYPE_CHOICES = [
     ('快速心电检测', '快速心电检测'),
 ]
 
+
 class IndexView(APIView):
     """
     接收 POST 请求并将数据分类注入到特定表中的视图类
