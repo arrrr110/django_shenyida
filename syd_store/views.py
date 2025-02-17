@@ -10,7 +10,10 @@ import json
 from datetime import datetime
 # from django.utils import timezone
 import pytz
+import logging
 
+# 配置日志
+logger = logging.getLogger(__name__)
 # 设置中国时区
 china_tz = pytz.timezone('Asia/Shanghai')
 
@@ -47,6 +50,7 @@ class IndexView(APIView):
         try:
             # 使用 request.data 来获取JSON数据
             data = request.data
+            logger.info(f"Received POST data: {data}")  # 记录接收到的POST数据
             device_model = data.get('deviceModel')
             unit_name = data.get('unitName')
             unit_no = data.get('unitNo')
@@ -61,6 +65,10 @@ class IndexView(APIView):
                 mac_addr=mac_addr,
                 device_no=device_no
             )
+            if created:
+                logger.info(f"Created new device: {device}")  # 记录新设备的创建
+            else:
+                logger.info(f"Using existing device: {device}")  # 记录使用已存在的设备
 
             # 确定数据类型
             data_type = None
@@ -74,6 +82,7 @@ class IndexView(APIView):
 
             if data_type not in [choice[0] for choice in DATA_TYPE_CHOICES]:
                 data_type = None
+                logger.info("Data type not recognized, setting to None")  # 记录数据类型未识别
 
             # 处理数据
             health_data = data['datas'][0]
@@ -137,12 +146,16 @@ class IndexView(APIView):
                 sex=health_data.get('sex'),
                 record_no=health_data.get('recordNo')
             )
+            logger.info(f"Created health data object: {health_data_obj}")  # 记录健康数据对象的创建
 
             serializer = HealthDataSerializer(health_data_obj)
+            logger.info(f"Serialized data: {serializer.data}")  # 记录序列化后的数据
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logger.error(f"An error occurred: {str(e)}", exc_info=True)  # 记录错误信息和堆栈跟踪
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, *args, **kwargs):
+        logger.info("Received GET request, but it's not allowed")  # 记录接收到不允许的GET请求
         return Response({'status': 'error', 'message': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
