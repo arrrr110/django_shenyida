@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
@@ -149,7 +149,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGGING = {
+LOGGING = { 
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
@@ -160,7 +160,8 @@ LOGGING = {
         },
     },
     'loggers': {
-        'api_app.views': {
+        # 确保这里的名称与 views.py 所在模块名称一致
+        'syd_store.views': {  
             'handlers': ['file'],
             'level': 'INFO',
             'propagate': True,

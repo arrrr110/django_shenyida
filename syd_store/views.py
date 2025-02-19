@@ -50,6 +50,7 @@ class IndexView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             # 使用 request.data 来获取JSON数据
+            print('*'*10, request.data)
             data = request.data
             logger.info(f"Received POST data: {data}")  # 记录接收到的POST数据
             device_model = data.get('deviceModel')
