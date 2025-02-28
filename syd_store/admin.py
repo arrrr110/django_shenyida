@@ -1,7 +1,7 @@
 # admin.py
 
 from django.contrib import admin
-from .models import Device, HealthData
+from .models import Device, HealthData, TestTransactionInfo, UserCheckupSingleRecords
 
 # 自定义截断显示函数
 def truncate_value(value):
@@ -48,3 +48,20 @@ class HealthDataAdmin(admin.ModelAdmin):
     ]
     # 过滤字段
     list_filter = ['data_type', 'measure_time']
+
+# new 2025-2-28
+# syd_store/admin.py
+
+# 定义一个辅助函数，用于获取模型的所有字段名
+def get_all_field_names(model):
+    return [field.name for field in model._meta.fields]
+
+@admin.register(TestTransactionInfo)
+class TestTransactionInfoAdmin(admin.ModelAdmin):
+    list_display = get_all_field_names(TestTransactionInfo)
+    search_fields = get_all_field_names(TestTransactionInfo)
+
+@admin.register(UserCheckupSingleRecords)
+class UserCheckupSingleRecordsAdmin(admin.ModelAdmin):
+    list_display = get_all_field_names(UserCheckupSingleRecords)
+    search_fields = get_all_field_names(UserCheckupSingleRecords)

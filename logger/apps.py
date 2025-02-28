@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class SydStoreConfig(AppConfig):
+class LoggerConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'syd_store'
-    verbose_name = '检测数据'
+    name = 'logger'
+    verbose_name = '操作日志'

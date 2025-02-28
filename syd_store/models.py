@@ -1,5 +1,43 @@
 from django.db import models
+from management.models import TestTypeMapping, DeviceRecords
+from django.contrib.auth.models import User
 
+
+class TestTransactionInfo(models.Model):
+    """
+    体检业务事务表
+    """
+    user_id = models.CharField(max_length=50, verbose_name='用户的唯一标识', help_text='建档模式下，用户ID应为手机号，有助于后续和用户小程序匹配；游客模式下，用户ID默认为时间+随机数（例20250224141944225）')
+    test_type_id = models.ForeignKey(TestTypeMapping, models.PROTECT, verbose_name='检测项目的唯一标识')
+    coop_org_user_records_id = models.ForeignKey(User, models.SET_NULL, blank=True, null=True, verbose_name='体检机构的唯一标识')
+    device_records_id = models.ForeignKey(DeviceRecords, models.PROTECT, verbose_name='体检设备的唯一标识', help_text='设备没有则自动建立数据')
+    physical_examination_time = models.DateTimeField(auto_now_add=True, verbose_name='体检的具体时间')
+
+    class Meta:
+        verbose_name = '体检事务表'
+        verbose_name_plural = '体检业务事务表（主表）'
+
+    def __str__(self):
+        return f"体检业务事务记录 {self.id}"
+
+
+class UserCheckupSingleRecords(models.Model):
+    """
+    体检业务表
+    """
+    text_key = models.CharField(max_length=50, verbose_name='关联检测类型', help_text='如xy、hr等')
+    text_value = models.CharField(max_length=255, verbose_name='关联检测的值', help_text='如\'96\'，\'阴性\'等')
+    unit_of_measurement = models.CharField(max_length=50, verbose_name='字段单位', help_text='从检测项目类型表中获取')
+    test_info_id = models.ForeignKey(TestTransactionInfo, models.PROTECT, verbose_name='事务表外键')
+    is_deleted = models.BooleanField(default=False, verbose_name='是否删除')
+
+    class Meta:
+        verbose_name = '体检业务表'
+        verbose_name_plural = '体检业务表（子表）'
+
+    def __str__(self):
+        return f"体检业务子记录 {self.id}"
+    
 # 设备模型
 class Device(models.Model):
     device_model = models.CharField(max_length=10, verbose_name='设备型号')
@@ -17,6 +55,9 @@ class Device(models.Model):
 
 # 合并后的健康数据模型
 class HealthData(models.Model):
+    """
+    test
+    """
     # 数据类型枚举选项
     DATA_TYPE_CHOICES = [
         ('身高体重', '身高体重'),
@@ -87,7 +128,7 @@ class HealthData(models.Model):
     record_no = models.CharField(max_length=20, blank=True, null=True, verbose_name='记录编号')
 
     def __str__(self):
-        return self.record_no
+        return self.user_id
 
     class Meta:
         verbose_name = '健康数据'

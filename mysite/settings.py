@@ -36,6 +36,10 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 INSTALLED_APPS = [
     'rest_framework',
     'syd_store.apps.SydStoreConfig',
+    'organization.apps.OrganizationConfig',
+    'management.apps.ManagementConfig',
+    'logger.apps.LoggerConfig',
+    'customer.apps.CustomerConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
