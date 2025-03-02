@@ -1,12 +1,10 @@
 # views.py
-# from django.http import JsonResponse
 # from django.views.decorators.csrf import csrf_exempt # django-rest-farmework不考虑csrf
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Device, HealthData
 from .serializers import DeviceSerializer, HealthDataSerializer
-import json
 from datetime import datetime
 # from django.utils import timezone
 import pytz
@@ -162,3 +160,31 @@ class IndexView(APIView):
     def get(self, request, *args, **kwargs):
         logger.info("Received GET request, but it's not allowed")  # 记录接收到不允许的GET请求
         return Response({'status': 'error', 'message': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+
+# views.py
+
+# 前面的导入和配置保持不变
+
+class HealthDataListView(APIView):
+    """
+    处理获取检测数据的 API 视图类
+    """
+    def get(self, request, *args, **kwargs):
+        try:
+            # 筛选 data_type 不为空的记录，按照 id 降序排序，取前 10 条
+            health_data_objects = HealthData.objects.exclude(data_type__exact='').order_by('-id')[:10]
+
+            # 序列化数据
+            serializer = HealthDataSerializer(health_data_objects, many=True)
+
+            # 记录日志
+            logger.info(f"Returning {len(serializer.data)} health data records")
+
+            # 返回响应
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # 记录错误日志
+            logger.error(f"An error occurred: {str(e)}", exc_info=True)
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
